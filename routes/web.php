@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\MangaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/popular', [MangaController::class, 'search'])->name('popular');
 
 Route::middleware([
     'auth:sanctum',
