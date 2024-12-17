@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('chapter_comments', function (Blueprint $table) {
+        Schema::create('chapters', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('chapter_id');
+            $table->string('title');
+            $table->string('external_id');
+            $table->string('volume');
             $table->string('chapter');
-            $table->string('content');
+            $table->integer('pages');
+
+            $table->unsignedBigInteger('manga_id');
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
+            $table->foreign('manga_id')->references('id')->on('mangas')->onDelete('cascade');
         });
     }
 
@@ -29,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('chapter_comments');
+        Schema::dropIfExists('chapters');
     }
 };
