@@ -7,7 +7,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/popular', [MangaController::class, 'search'])->name('popular');
+Route::get('/popular', [MangaController::class, 'home'])->name('popular');
+Route::get('/test', [MangaController::class, 'test'])->name('test');
 
 Route::middleware([
     'auth:sanctum',

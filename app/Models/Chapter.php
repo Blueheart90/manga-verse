@@ -8,6 +8,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Chapter extends Model
 {
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'title',
+        'external_id',
+        'volume',
+        'chapter',
+        'pages',
+    ];
     public function manga(): BelongsTo
     {
         return $this->belongsTo(Manga::class);
