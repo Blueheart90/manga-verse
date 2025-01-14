@@ -2,7 +2,8 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Arr;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
 
 use function Illuminate\Log\log;
 
@@ -15,14 +16,15 @@ class MangaService
       private string $baseUrl = 'https://api.mangadex.org',
    ) {}
 
+
    /**
     * Retrieves a list of popular manga based on the provided limit.
     *
     * @param int $limit The maximum number of manga to retrieve (default: 10)
     * @throws \Exception If an error occurs during the request
-    * @return \Illuminate\Http\JsonResponse A JSON response containing the list of popular manga or an error message
+    * @return array A list of popular manga or an error message
     */
-   public function getPopular(int $limit = 10)
+   public function getPopular(int $limit = 10): array
    {
       $queryParams = [
          'limit' => $limit,
@@ -32,14 +34,13 @@ class MangaService
 
       try {
          $data = $this->fetchService->request($this->baseUrl . '/manga', 'GET', $queryParams);
-
-         return response()->json($data);
+         return $data['data'];
       } catch (\Exception $e) {
          return response()->json(['error' => $e->getMessage()], 500);
       }
    }
 
-   function getLastUpdateChapters(int $limit = 24)
+   function getLastUpdateChapters(int $limit = 24): array
    {
       $queryParams = [
          'includes' => ['scanlation_group'],
@@ -51,39 +52,79 @@ class MangaService
       try {
          $data = $this->fetchService->request($this->baseUrl . '/chapter', 'GET', $queryParams);
 
-         return response()->json($data);
+         return $data['data'];
       } catch (\Exception $e) {
          return response()->json(['error' => $e->getMessage()], 500);
       }
    }
 
-   function getLastUpdateMangas(int $limit = 24)
+
+
+   /**
+    * Retrieves a collection of the latest updated mangas.
+    *
+    * @param int $limit The maximum number of mangas to retrieve (default: 24)
+    * @return array A collection of mangas with their latest chapters
+    */
+   function getLastUpdateMangas(int $limit = 24): array
    {
+      // Fetch the latest updated chapters
+      $chapters = $this->getLastUpdateChapters($limit);
 
-      $chapters = $this->getLastUpdateChapters($limit)->getData(true)['data'];
+      // Return an empty collection if no chapters are found
+      if (empty($chapters)) {
+         return collect();
+      }
 
+      // Group chapters by manga
+      $groupedChapters = $this->groupChaptersByManga($chapters);
+
+      // Extract unique manga IDs from the chapters
       $mangaIds = collect($chapters)
          ->pluck('relationships')
          ->flatten(1)
          ->where('type', 'manga')
-         ->pluck('id')->toArray();
+         ->pluck('id')->unique()->toArray();
 
+
+      // Combine manga with their respective chapters and return the result
+      return $this->combineMangaWithChapters($mangaIds, $groupedChapters, $limit);
+   }
+
+   function groupChaptersByManga($chapters): array
+   {
+      // Agrupar los capítulos por manga_id
+      $groupedChapters = collect($chapters)->groupBy(function ($chapter) {
+         return collect($chapter['relationships'])
+            ->firstWhere('type', 'manga')['id'];
+      })->toArray();
+
+      return $groupedChapters;
+   }
+
+   function combineMangaWithChapters($mangaIds, $groupedChapters, $limit): array
+   {
 
       $queryParams = [
-         'includes' => ['cover_art'],
-         'ids' => $mangaIds,
-         'contentRating' => ['safe', 'suggestive', 'erotica', 'pornographic'], // Laravel codifica  a 'contentRating[]=safe&contentRating[]....etc
          'limit' => $limit,
+         'includes' => ['cover_art'],
+         'ids' => array_values($mangaIds),
+         'contentRating' => ['safe', 'suggestive', 'erotica', 'pornographic'], // Laravel codifica  a 'contentRating[]=safe&contentRating[]....etc
       ];
-
-      dump($queryParams);
 
       try {
          $data = $this->fetchService->request($this->baseUrl . '/manga', 'GET', $queryParams);
-
-         return response()->json($data);
+         $mangasData = $data['data'];
       } catch (\Exception $e) {
          return response()->json(['error' => $e->getMessage()], 500);
       }
+      $combinedData = collect($mangasData)->map(function ($manga) use ($groupedChapters) {
+         $mangaId = $manga['id'];
+         return array_merge($manga, [
+            'chapters' => $groupedChapters[$mangaId] ?? [],
+         ]);
+      });
+
+      return $combinedData->toArray();
    }
 }
