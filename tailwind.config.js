@@ -20,6 +20,11 @@ export default {
                 sintony: ["Sintony", ...defaultTheme.fontFamily.sans],
                 poppins: ["Poppins", ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                plumpPurple: "#6f42c1",
+                plumpPurpleDark: "#5f25a6",
+                turquoise: "#4cebfc",
+            },
         },
     },
 

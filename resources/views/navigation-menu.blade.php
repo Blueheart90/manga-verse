@@ -1,16 +1,15 @@
-<nav x-data="{ open: false }" class="">
+<nav x-data="{ open: false }" class="container mx-auto">
     <!-- Primary Navigation Menu -->
-    <div class="container px-4 mx-auto bg-white max-w-7xl sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16 ">
+    <div class=" bg-plumpPurpleDark px-5">
+        <div class=" flex justify-between h-20   ">
             <div class="flex">
 
                 <!-- Navigation Links -->
-                <div class="items-center hidden space-x-8 text-4xl sm:-my-px sm:ms-10 sm:flex font-bubblegum">
-
-
-                    MangaVerse
-
-
+                <div class="flex items-center flex-col justify-center">
+                    <p class=" font-bubblegum font-semibold  text-white text-4xl">
+                        Manga<span class=" text-turquoise">verse</span>
+                    </p>
+                    <span class=" font-semibold text-turquoise text-lg">マンガバース</span>
                 </div>
                 {{-- Array de nav links --}}
                 @php

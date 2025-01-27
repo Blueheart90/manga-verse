@@ -3,48 +3,58 @@
 namespace App\Http\Controllers;
 
 
-use App\Data\MangaData;
-use GuzzleHttp\HandlerStack;
-use Illuminate\Http\Request;
+
+
+use GuzzleHttp\Promise\Utils;
 use App\Services\MangaService;
-use GuzzleHttp\Handler\CurlHandler;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\URL;
+use App\Services\MangaServicetest;
+use Illuminate\Http\Client\Pool;
+use App\ViewModels\MangaViewModel;
 use Illuminate\Support\Facades\Http;
+
 
 class MangaController extends Controller
 {
 
 
-    public function __construct(private MangaService $mangaService) {}
+    public function __construct(private MangaService $mangaService, private MangaServicetest $mangaServicetest) {}
     public function home()
     {
         $start = microtime(true);
-        $popularMangas = $this->mangaService->getPopular(1);
+        $mangaResponses = Utils::unwrap([
+            'popularMangas' => $this->mangaService->getPopular(11),
+            'recentlyAddedMangas' => $this->mangaService->recentlyAdded(11),
+            'lastUpdatedMangas' => $this->mangaService->getLastUpdateMangas(11),
+        ]);
 
+        $popularMangasData = json_decode($mangaResponses['popularMangas']->getBody()->getContents(), true)['data'];
+        $recentlyAddedMangasData = json_decode($mangaResponses['recentlyAddedMangas']->getBody()->getContents(), true)['data'];
+        $lastUpdatedMangasData = $mangaResponses['lastUpdatedMangas'];
+
+        $mangaViewModel = new MangaViewModel($popularMangasData, $lastUpdatedMangasData, $recentlyAddedMangasData);
         $end = microtime(true);
-
-        Log::info("Tiempo de solicitud: " . ($end - $start) . " segundos");
-        return $popularMangas;
+        logger("Tiempo de solicitud pool: " . ($end - $start) . " segundos");
+        return view('home', $mangaViewModel);
     }
 
     public function test()
     {
-        $lastMangas = $this->mangaService->getLastUpdateMangas(5);
-        $popularMangas = $this->mangaService->getPopular(5);
-        dump($lastMangas, $popularMangas);
 
-        // Log::info($response);
-        // $mangas = MangaData::collect(
-        //     collect($response)->map(function ($manga) {
-        //         return [
-        //             'id' => $manga['id'],
-        //             'type' => $manga['type'],
-        //             'title' => $manga['attributes']['title'] ?? [],
-        //         ];
-        //     })
-        // );
+        $start = microtime(true);
+        $popularMangas = $this->mangaServicetest->getPopular(10);
+        $lastMangas = $this->mangaServicetest->getLastUpdateMangas(10);
+        $recentlyAdded = $this->mangaServicetest->recentlyAdded(10);
 
-        //return $mangas;
+
+        $mangaViewModel = new MangaViewModel($popularMangas, $lastMangas, $recentlyAdded);
+
+        $end = microtime(true);
+
+        logger("Tiempo de solicitud: " . ($end - $start) . " segundos");
+
+        dump($popularMangas, $lastMangas);
+        // $lastMangas = $this->mangaService->getLastUpdateMangas(5);
+        // $popularMangas = $this->mangaService->getPopular(5);
+        // dump($lastMangas, $popularMangas);
     }
 }
