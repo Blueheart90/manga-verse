@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Manga\Data;
+namespace App\Data\Manga;
 
 use App\Data\Manga\MangaAttributesData;
 use Spatie\LaravelData\Data;
