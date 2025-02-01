@@ -20,11 +20,10 @@ class MangaController extends Controller
     public function __construct(private MangaService $mangaService, private MangaServicetest $mangaServicetest) {}
     public function home()
     {
-        $start = microtime(true);
         $mangaResponses = Utils::unwrap([
-            'popularMangas' => $this->mangaService->getPopular(11),
-            'recentlyAddedMangas' => $this->mangaService->recentlyAdded(11),
-            'lastUpdatedMangas' => $this->mangaService->getLastUpdateMangas(11),
+            'popularMangas' => $this->mangaService->getPopular(2),
+            'recentlyAddedMangas' => $this->mangaService->recentlyAdded(1),
+            'lastUpdatedMangas' => $this->mangaService->getLastUpdateMangas(1),
         ]);
 
         $popularMangasData = json_decode($mangaResponses['popularMangas']->getBody()->getContents(), true)['data'];
@@ -32,8 +31,7 @@ class MangaController extends Controller
         $lastUpdatedMangasData = $mangaResponses['lastUpdatedMangas'];
 
         $mangaViewModel = new MangaViewModel($popularMangasData, $lastUpdatedMangasData, $recentlyAddedMangasData);
-        $end = microtime(true);
-        logger("Tiempo de solicitud pool: " . ($end - $start) . " segundos");
+
         return view('home', $mangaViewModel);
     }
 
@@ -41,7 +39,7 @@ class MangaController extends Controller
     {
 
         $start = microtime(true);
-        $popularMangas = $this->mangaServicetest->getPopular(10);
+        $popularMangas = $this->mangaServicetest->getPopular(1);
         $lastMangas = $this->mangaServicetest->getLastUpdateMangas(10);
         $recentlyAdded = $this->mangaServicetest->recentlyAdded(10);
 
@@ -53,6 +51,9 @@ class MangaController extends Controller
         logger("Tiempo de solicitud: " . ($end - $start) . " segundos");
 
         dump($popularMangas, $lastMangas);
+        // return  convert to json
+
+
         // $lastMangas = $this->mangaService->getLastUpdateMangas(5);
         // $popularMangas = $this->mangaService->getPopular(5);
         // dump($lastMangas, $popularMangas);

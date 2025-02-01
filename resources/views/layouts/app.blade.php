@@ -24,7 +24,7 @@
     @livewireStyles
 </head>
 
-<body class="font-sans antialiased">
+<body class=" font-poppins antialiased">
     <div class="min-h-screen bg-plumpPurple dark:bg-gray-900">
         @livewire('navigation-menu')
 

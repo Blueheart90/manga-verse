@@ -26,16 +26,20 @@ class MangaViewModel extends ViewModel
 
     private function formatMangaData(array $mangaData): Collection
     {
-        return collect($mangaData)->map(function (array $mangaAttributes) {
-            $coverUrl = $this->getCoverUrl($mangaAttributes);
+
+        return collect($mangaData)->map(function (array $manga) {
+            $coverUrl = $this->getCoverUrl($manga);
             $attributes = [
-                'title' => $this->getTitle($mangaAttributes),
+                'title' => $this->getTitle($manga),
                 'cover-art' => $coverUrl,
-                'tags' => $this->getTags($mangaAttributes),
-                'description' => $this->getDescription($mangaAttributes),
+                'tags' => $this->getTags($manga),
+                'description' => $this->getDescription($manga),
             ];
 
-            return collect($mangaAttributes)->merge($attributes)->except(['relationships']);
+            // Combina los atributos nuevos con los datos originales y excluye 'relationships'
+            return collect($manga)
+                ->merge($attributes)
+                ->except(['relationships']);
         });
     }
 
